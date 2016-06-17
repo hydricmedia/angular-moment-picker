@@ -240,15 +240,27 @@
 					$scope.view.next.selectable     = $scope.limits.isBeforeOrEqualMax(momentNext, $scope.view.precision());
 					$scope.view.next.label          = $sce.trustAsHtml($scope.view.next.selectable ? $scope.rightArrow : '&nbsp;');
 					$scope.view.title               = $scope[$scope.view.selected + 'View'].render();
+
+
+
 				},
-				change: function (view) {
+				change: function (view, dontClose) {
 					var nextView = $scope.views.all.indexOf(view),
 						minView  = $scope.views.all.indexOf($scope.minView),
 						maxView  = $scope.views.all.indexOf($scope.maxView);
 					
 					if (nextView < 0 || nextView > maxView) {
 						$scope.valueUpdate($scope.valueMoment = $scope.view.moment.clone());
-						$scope.view.close();
+
+						/**
+						 *
+						 * Added dontClose restriction to prevent the picker from closing when setting the initial minute
+						 *
+						 */
+						if(!dontClose) {
+							$scope.view.close();
+						}
+
 					} else if (nextView >= minView) $scope.view.selected = view;
 				}
 			};
@@ -427,13 +439,22 @@
 						i++;
 						minute.add(momentPicker.minutesStep, 'minutes');
 					}
+
+					$scope.hourView.setMinute($scope.hourView.minutes[0][0], true);
+					console.log("setting default minute");
+
 					// return title
 					return $scope.view.moment.clone().startOf('hour').format('lll');
 				},
-				setMinute: function (minute) {
+				setMinute: function (minute, initialUpdate) {
+					console.log("set minute to", minute);
 					if (!minute.selectable) return;
 					$scope.view.update($scope.view.moment.year(minute.year).month(minute.month).date(minute.date).hour(minute.hour).minute(minute.minute));
-					$scope.view.change('minute');
+					if(!initialUpdate) {
+						$scope.view.change('minute');
+					} else {
+						$scope.view.change('minute', true);
+					}
 				}
 			};
 			// minute view
